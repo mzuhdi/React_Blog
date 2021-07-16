@@ -5,13 +5,9 @@ const Home = () => {
 
     //useState hook syntax. Making a variable reactive
     const [name, setName] = useState("mario");
-    const [blogs, setBlogs] = useState(
-        [
-            { title: 'My new website', body: 'lorem ipsum...', author: 'mario', id: 1 },
-            { title: 'Welcome party!', body: 'lorem ipsum...', author: 'yoshi', id: 2 },
-            { title: 'Web dev top tips', body: 'lorem ipsum...', author: 'mario', id: 3 }
-        ]
-    );
+    const [blogs, setBlogs] = useState([]);
+    const [isPending, setIsPending] = useState(true);
+    const [error, setError] = useState(null);
 
     const hello = () => {
         console.log("hello from console");
@@ -27,20 +23,35 @@ const Home = () => {
         setBlogs(newBlogs)
     }
 
-    useEffect( () => {
-        console.log("use effect ran");
-        console.log(name);
-    }, [name]);
+    useEffect(() => {
+        fetch("http://localhost:8000/blogss")
+            .then((res) => {
+                if(!res.ok){
+                    throw Error("could not fetch the resource");
+                }
+                return res.json();
+            })
+            .then((data) => {
+                setBlogs(data);
+                setIsPending(false);
+            })
+            .catch((err) =>{
+                setIsPending(false);
+                setError(err.message);
+            })
+    }, []);
 
     return (
         <div className="home">
+            {error? error:null}
+            {isPending? <p>loading</p>:null}
             <h2>Homepage</h2>
             <p>{name}</p>
             <button onClick={hello}>Click me</button>
             <button onClick={() => helloinput("jack")}> Click me 2</button>
             <p> ------- </p>
-            <BlogList blogs={blogs} title="All blogs" handleDelete={handleDelete}/>
-            <BlogList blogs={blogs.filter((blog) => blog.author === 'mario')} title="Mario's Blog"/>
+            <BlogList blogs={blogs} title="All blogs" handleDelete={handleDelete} />
+            <BlogList blogs={blogs.filter((blog) => blog.author === 'mario')} title="Mario's Blog" />
         </div>
     );
 }
